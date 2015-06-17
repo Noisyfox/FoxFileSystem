@@ -13,6 +13,21 @@ typedef unsigned __int32 cluster_t;
 
 #define CLUSTER_4K 4096
 
+// 保留簇定义，这些簇是不能被释放掉的，用来做特定用途
+// 这些保留簇拥有确定的簇序号，并且在创建完分区后就可以访问
+// 由于本系统设计为动态分配到的簇的序号事先不可知，为了能够
+// 让上层应用能够从确定的位置读取到第一块的数据，故保留了3个簇。
+// 其中 MM 代表 MMC，是簇管理系统用来存放簇分配信息的，上层应用
+// 不应该访问本簇。
+// PRIMARY 和 SECONDARY 可自由使用。设置两个空闲保留簇的目的是
+// 便于进行冗余设计。
+#define CLUSTER_REV_MM 0
+#define CLUSTER_REV_PRIMARY 1
+#define CLUSTER_REV_SECONDARY 2
+
+#define CLUSTER_REV_MAX CLUSTER_REV_SECONDARY
+#define CLUSTER_REV_COUNT CLUSTER_REV_MAX + 1
+
 typedef struct
 {
     size_t cluster_size; // 簇大小

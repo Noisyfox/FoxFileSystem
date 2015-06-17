@@ -42,9 +42,9 @@ bool ClusterMgr::CreatePartition(const char* file, ClusterInfo* info)
 
     FreeStack free_stack;
     free_stack.count = 0;
-    free_stack.next_stack = 0;
+    free_stack.next_stack = EOC;
 
-    for (cluster_t i = info->cluster_count - 1; i > 0; i--)
+    for (cluster_t i = info->cluster_count - 1; i > CLUSTER_REV_MAX; i--)
     {
         free_stack.stack[free_stack.count++] = i;
         if (free_stack.count == MAX_STACK)
@@ -95,7 +95,7 @@ bool ClusterMgr::LoadPartition(const char* file)
     inactive_cache = new LruCache<cluster_t, ClusterContainer*>(cache_size);
     active_cache = new SparseArray<cluster_t, ClusterContainer*>();
 
-    MMC = _Fetch(0);
+    MMC = _Fetch(CLUSTER_REV_MM);
 
     if (MMC == NULL)
     {
@@ -218,7 +218,7 @@ cluster_t* ClusterMgr::Allocate(cluster_t count, cluster_t* out)
         if (free_stack.count == 0) // 如果MMC中空闲簇用尽，则调入下一个空闲栈
         {
             cluster_t next_stack = free_stack.next_stack;
-            if (next_stack == 0)
+            if (next_stack == EOC)
             { // 卧槽！空间耗尽！
                 goto faild;
             }
@@ -276,6 +276,11 @@ bool ClusterMgr::Free(cluster_t cluster)
 {
     FreeStack free_stack;
     ClusterContainer* full_cluster = NULL;
+
+    if(cluster <= CLUSTER_REV_MAX)
+    {
+        return false;
+    }
 
     size_t stack_offset = info.cluster_size - sizeof(FreeStack); // 空闲栈在簇上的偏移量
 
