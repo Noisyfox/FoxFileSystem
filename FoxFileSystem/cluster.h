@@ -1,5 +1,5 @@
-#ifndef __CLUSTER_H
-#define __CLUSTER_H
+#ifndef __CLUSTER_H_FFS
+#define __CLUSTER_H_FFS
 
 #include <cstdio>
 
@@ -26,7 +26,7 @@ typedef unsigned __int32 cluster_t;
 #define CLUSTER_REV_SECONDARY 2
 
 #define CLUSTER_REV_MAX CLUSTER_REV_SECONDARY
-#define CLUSTER_REV_COUNT CLUSTER_REV_MAX + 1
+#define CLUSTER_REV_COUNT (CLUSTER_REV_MAX + 1)
 
 typedef struct
 {
@@ -63,16 +63,21 @@ private:
     unsigned __int8* buffer;
     unsigned __int16 flag;
     unsigned __int32 ref;
-    
+
     ClusterContainer(ClusterMgr* mgr, cluster_t cluster);
-    ~ClusterContainer();
-    bool Sync();
     void NewRef();
     bool ReleaseRef(); // 返回是否 free
+
+    bool Modify();
 public:
+    ~ClusterContainer();
+    bool Sync();
     bool Avaliable();
     size_t Read(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* dst);
     size_t Write(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* src);
+    size_t Memset(size_t dst_offset, size_t count, unsigned __int8 value);
+
+    cluster_t GetCluster();
 };
 
 class ClusterMgr
@@ -107,6 +112,8 @@ public:
     bool Dispose(ClusterContainer& cluster); // 释放 cluster 中引用的数据，此时可以将内存中的数据写回到磁盘
 
     bool Sync(); // 将所有挂起的修改全部写入磁盘
+
+    bool IsActive(cluster_t id);
 };
 
 #endif

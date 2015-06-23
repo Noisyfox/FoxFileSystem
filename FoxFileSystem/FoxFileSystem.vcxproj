@@ -12,12 +12,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cluster.cpp" />
+    <ClCompile Include="node.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cluster.h" />
     <ClInclude Include="lru.hpp" />
+    <ClInclude Include="node.h" />
     <ClInclude Include="SparseArray.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{16EB1AC1-A460-41B5-9983-4D03F4447C36}</ProjectGuid>

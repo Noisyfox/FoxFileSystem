@@ -1,5 +1,5 @@
-#ifndef __SPARSEARRAY_H
-#define __SPARSEARRAY_H
+#ifndef __SPARSEARRAY_H_FFS
+#define __SPARSEARRAY_H_FFS
 
 #include <cstdlib>
 #include <cstring>
