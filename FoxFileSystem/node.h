@@ -95,7 +95,7 @@ public:
     bool Truncate(size_t size); // 改变 Node 大小
 
     size_t GetPointer(); // 获得当前访问指针位置
-    __int32 Seek(__int64 offset, __int32 origin); // 改变当前访问指针
+    __int64 Seek(size_t offset); // 改变当前访问指针
     size_t Write(void const* buffer, size_t size);
     size_t Read(void* buffer, size_t size);
 };

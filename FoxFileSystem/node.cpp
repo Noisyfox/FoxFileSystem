@@ -5,7 +5,8 @@
 #include "node.h"
 #include "util.h"
 
-#define SEEK_FAIL -2
+#define SEEK_EMPTY -2
+#define SEEK_FAIL -3
 
 Node::Node(NodeMgr* mgr, ClusterContainer* mc) :
     node_mgr(mgr),
@@ -68,6 +69,12 @@ bool Node::Modify()
 
 __int8 Node::ClusterSeek(size_t offset)
 {
+    if(offset == -1) // 特殊情况，在计算尺寸边界的时候用
+    {
+        seek_cluster_offset = sizeof(INode) + offset;
+        return -1; // 不需要索引，直接可以储存在 MC 中
+    }
+
     if (offset < 0)
     {
         return SEEK_FAIL; // 出错
@@ -214,7 +221,7 @@ faild:
 
 #define SEEK_SIZE(s) \
 do{                                                           \
-    if ((seek_depth_##s = ClusterSeek(s)) == SEEK_FAIL)       \
+    if ((seek_depth_##s = ClusterSeek(s - 1)) == SEEK_FAIL)       \
     {                                                         \
         goto faild;                                           \
     }                                                         \
@@ -303,7 +310,7 @@ bool Node::Shrink(size_t curr, size_t target)
         if (!same_cluster) // 不在同一个簇中
         {
             // 删除多余簇
-            ASSERT_FALSE(RemoveCluster(seek_depth_curr, inode.index_indir[seek_depth_curr - 1], seek_index_target, seek_index_curr));
+            ASSERT_FALSE(RemoveCluster(seek_depth_curr, inode.index_indir[seek_depth_curr - 1], &seek_index_target[1], &seek_index_curr[1]));
             //修正索引
             memcpy(seek_index_curr, seek_index_target, sizeof(seek_index_target));
             //seek_cluster_offset_curr = index_boundary.size_level[0] - 1;
@@ -417,7 +424,7 @@ bool Node::Expand(size_t curr, size_t target)
         }
         if (!same_cluster) // 不在同一个簇中
         {
-            ASSERT_FALSE(BuildCluster(seek_depth_target, inode.index_indir[seek_depth_target - 1], seek_index_curr, seek_index_target));
+            ASSERT_FALSE(BuildCluster(seek_depth_target, inode.index_indir[seek_depth_target - 1], &seek_index_curr[1], &seek_index_target[1]));
             //修正索引
             memcpy(seek_index_target, seek_index_curr, sizeof(seek_index_curr));
             seek_cluster_offset_target = index_boundary.size_level[0] - 1;
@@ -445,7 +452,7 @@ bool Node::Expand(size_t curr, size_t target)
     DISPOSE_CLUSTER(current_cluster);
 
     // 然后我们更新文件的描述
-    inode.size = target;
+    inode.size = target + 1;
     ASSERT_FALSE(Modify());
 
     return true;
@@ -799,31 +806,18 @@ size_t Node::GetPointer()
     return cdo;
 }
 
-__int32 Node::Seek(__int64 offset, __int32 origin)
+__int64 Node::Seek(size_t offset)
 {
-    // 计算目标偏移
-    __int64 target_offset;
-    switch (origin)
+    if(offset == cdo)
     {
-    case SEEK_SET:
-        target_offset = offset;
-        break;
-    case SEEK_CUR:
-        target_offset = cdo + offset;
-        break;
-    case SEEK_END:
-        target_offset = GetSize() - 1 + offset;
-        break;
-    default:
-        goto faild;
+        return cdo;
     }
-
-    if (target_offset < 0 || target_offset >= GetSize())
+    if (offset < 0 || offset >= GetSize())
     {
         goto faild;
     }
 
-    ASSERT_FALSE(LoadCluster((size_t)target_offset));
+    ASSERT_FALSE(LoadCluster((size_t)offset));
 
     return cdo;
 faild:
@@ -1051,9 +1045,4 @@ faild:
 bool NodeMgr::Sync()
 {
     return false;
-}
-
-void a()
-{
-    int b = sizeof(INode);
 }

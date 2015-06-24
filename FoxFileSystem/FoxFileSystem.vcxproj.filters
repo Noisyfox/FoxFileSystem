@@ -24,6 +24,9 @@
     <ClCompile Include="node.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="virtual_file.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cluster.h">
@@ -39,6 +42,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="virtual_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

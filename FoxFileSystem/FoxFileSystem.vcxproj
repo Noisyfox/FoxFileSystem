@@ -14,6 +14,7 @@
     <ClCompile Include="cluster.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="virtual_file.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cluster.h" />
@@ -21,6 +22,7 @@
     <ClInclude Include="node.h" />
     <ClInclude Include="SparseArray.h" />
     <ClInclude Include="util.h" />
+    <ClInclude Include="virtual_file.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{16EB1AC1-A460-41B5-9983-4D03F4447C36}</ProjectGuid>
