@@ -192,7 +192,3 @@ size_t VFile::Read(vfile_t* vf, void* buffer, size_t size)
 
     return read_size;
 }
-
-void a()
-{
-}

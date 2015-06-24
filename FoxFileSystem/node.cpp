@@ -44,6 +44,8 @@ faild:
 bool Node::Load()
 {
     ASSERT_SIZE(MC->Read(0, 0, sizeof(INode), (unsigned __int8*)&inode), sizeof(INode));
+    inode.time_visit = time(NULL);
+    Modify();
 
     return true;
 faild:
@@ -349,6 +351,7 @@ bool Node::Shrink(size_t curr, size_t target)
 
     // 然后我们更新文件的描述
     inode.size = target;
+    inode.time_modify = time(NULL);
     ASSERT_FALSE(Modify());
 
     return true;
@@ -472,6 +475,8 @@ bool Node::Expand(size_t curr, size_t target)
 
     // 然后我们更新文件的描述
     inode.size = target + 1;
+
+    inode.time_modify = time(NULL);
     ASSERT_FALSE(Modify());
 
     return true;
@@ -881,6 +886,8 @@ size_t Node::Write(void const* buffer, size_t size)
         offset += available_in_cluster;
         size -= available_in_cluster;
     }
+    inode.time_modify = time(NULL);
+    Modify();
 
 faild:
     return offset;

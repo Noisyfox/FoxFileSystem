@@ -10,7 +10,7 @@ int main()
     };
     bool ret = ClusterMgr::CreatePartition("Z:\\part0.f", &info);
     ClusterMgr cluster_mgr;
-    if(!ret)
+    if (!ret)
     {
         return -1;
     }
@@ -38,9 +38,9 @@ int main()
 
     long i = 0;
     unsigned char v = 0, v2 = 0;
-    while(1)
+    while (1)
     {
-        if(vfile.Write(vf, &v, 1) != 1)
+        if (vfile.Write(vf, &v, 1) != 1)
         {
             break;
         }
@@ -48,25 +48,32 @@ int main()
         v++;
     }
 
-   if(vfile.Seek(vf, 0, SEEK_SET) != 0)
-   {
-       return 0;
-   }
-   i = 0;
-   v = 0;
-   while (1)
-   {
-       if (vfile.Read(vf, &v2, 1) != 1)
-       {
-           break;
-       }
-       if(v2 != v)
-       {
-           return -1;
-       }
-       i++;
-       v++;
-   }
+    if (vfile.Seek(vf, 0, SEEK_SET) != 0)
+    {
+        return 0;
+    }
+    i = 0;
+    v = 0;
+    while (1)
+    {
+        if (vfile.Read(vf, &v2, 1) != 1)
+        {
+            break;
+        }
+        if (v2 != v)
+        {
+            return -1;
+        }
+        i++;
+        v++;
+    }
+
+    ret = vfile.Truncate(vf, 0);
+
+    if (vf == NULL)
+    {
+        return -1;
+    }
 
     ret = cluster_mgr.ClosePartition();
 
