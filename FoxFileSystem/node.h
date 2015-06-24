@@ -84,6 +84,8 @@ private:
     bool BuildClusterLeft(__int8 depth, cluster_t index, size_t* edge_left);
     bool BuildCluster(__int8 depth, cluster_t index, size_t* edge_left, size_t* edge_right);
 public:
+    cluster_t GetNodeId();
+
     bool Sync();
 
     unsigned __int16 GetMode(unsigned __int16 mask);

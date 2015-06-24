@@ -725,6 +725,11 @@ faild:
     return false;
 }
 
+cluster_t Node::GetNodeId()
+{
+    return MC->GetCluster();
+}
+
 bool Node::Sync()
 {
     if ((flag & FLAG_DIRTY) == 0)
