@@ -1,6 +1,7 @@
 #ifndef __NODE_H
 #define __NODE_H
 
+#include "f_types.h"
 #include "cluster.h"
 
 #define MAX_DIRECT 12
@@ -31,13 +32,13 @@ typedef struct
 
 typedef struct
 {
-    size_t no_index;
-    size_t index_direct[MAX_DIRECT];
-    size_t index_indir[MAX_INDIRECT];
+    file_size_t no_index;
+    file_size_t index_direct[MAX_DIRECT];
+    file_size_t index_indir[MAX_INDIRECT];
 
     cluster_t index_per_cluster; // 每个簇可储存多少个索引
 
-    size_t size_level[MAX_INDIRECT + 1]; // 各级索引可容纳的尺寸
+    file_size_t size_level[MAX_INDIRECT + 1]; // 各级索引可容纳的尺寸
 } CIndex; // 用来记录每一级索引分别可以保存多少字节数据的结构体
 
 class Node

@@ -47,5 +47,8 @@
     <ClInclude Include="virtual_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="f_types.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

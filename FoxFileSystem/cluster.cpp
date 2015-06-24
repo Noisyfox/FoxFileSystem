@@ -25,7 +25,7 @@ bool ClusterMgr::CreatePartition(const char* file, ClusterInfo* info)
         return false;
     }
 
-    long total_size = info->cluster_count * info->cluster_size;
+    file_size_t total_size = info->cluster_count * info->cluster_size;
 
     ASSERT_EOF(fseek(fp, total_size - 1, SEEK_SET));
     ASSERT_EOF(fputc(0, fp));
@@ -49,7 +49,7 @@ bool ClusterMgr::CreatePartition(const char* file, ClusterInfo* info)
         if (free_stack.count == MAX_STACK)
         {
             // 空闲栈写入簇中
-            long offset = stack_offset + i * info->cluster_size; // 计算目标偏移量
+            offset_t offset = stack_offset + i * info->cluster_size; // 计算目标偏移量
             ASSERT_EOF(fseek(fp, offset, SEEK_SET));
             ASSERT_SIZE(fwrite(&free_stack, sizeof(FreeStack), 1, fp), 1);
             // 链接空闲栈
@@ -153,7 +153,7 @@ bool ClusterMgr::ClosePartition()
     return true;
 }
 
-size_t ClusterMgr::GetClusterSize()
+cluster_size_t ClusterMgr::GetClusterSize()
 {
     return info.cluster_size;
 }
@@ -211,7 +211,7 @@ cluster_t* ClusterMgr::Allocate(cluster_t count, cluster_t* out)
     size_t stack_offset = info.cluster_size - sizeof(FreeStack); // 空闲栈在簇上的偏移量
 
     // 读取 MMC 的 FreeStack
-    ASSERT_SIZE(MMC->Read(0, stack_offset, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
+    ASSERT_SIZE(MMC->Read(0, stack_offset, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
 
     while (count_p > 0)
     {
@@ -225,12 +225,12 @@ cluster_t* ClusterMgr::Allocate(cluster_t count, cluster_t* out)
             else
             {
                 next_cluster = Fetch(next_stack);// 调入下一个簇
-                ASSERT_SIZE(next_cluster->Read(0, stack_offset, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));// 装入空闲栈
+                ASSERT_SIZE(next_cluster->Read(0, stack_offset, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));// 装入空闲栈
                 Dispose(*next_cluster);
                 next_cluster = NULL;
 
                 // 更新 MMC
-                ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
+                ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
             }
         }
         cluster_t curr_free = free_stack.count; // 当前栈中剩余簇数量
@@ -246,7 +246,7 @@ cluster_t* ClusterMgr::Allocate(cluster_t count, cluster_t* out)
         free_stack.count = curr_free;
 
         // 更新 MMC
-        ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
+        ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
 
         // 从分配栈中读出数据到输出数组中
         memcpy((void*)p, allo_stack.stack, allo_stack.count * sizeof(cluster_t));
@@ -258,7 +258,7 @@ cluster_t* ClusterMgr::Allocate(cluster_t count, cluster_t* out)
     }
 
     // 更新MMC
-    ASSERT_SIZE(MMC->Write(0, 0, sizeof(ClusterInfo), (unsigned char*)&info), sizeof(ClusterInfo));
+    ASSERT_SIZE(MMC->Write(0, 0, sizeof(ClusterInfo), (byte_t*)&info), sizeof(ClusterInfo));
 
     return allocation;
 faild:
@@ -295,7 +295,7 @@ bool ClusterMgr::Free(cluster_t cluster)
     size_t stack_offset = info.cluster_size - sizeof(FreeStack); // 空闲栈在簇上的偏移量
 
     // 读取 MMC 的 FreeStack
-    ASSERT_SIZE(MMC->Read(0, stack_offset, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
+    ASSERT_SIZE(MMC->Read(0, stack_offset, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
 
     if (free_stack.count == MAX_STACK)
     {
@@ -310,7 +310,7 @@ bool ClusterMgr::Free(cluster_t cluster)
     {
         // 栈满，写入 cluster 指向的簇中
         full_cluster = Fetch(cluster);
-        ASSERT_SIZE(full_cluster->Write(stack_offset, 0, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
+        ASSERT_SIZE(full_cluster->Write(stack_offset, 0, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
         Dispose(*full_cluster);
         full_cluster = NULL;
 
@@ -321,8 +321,8 @@ bool ClusterMgr::Free(cluster_t cluster)
 
     info.free_cluster_count++;
     // 更新MMC
-    ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (unsigned char*)&free_stack), sizeof(FreeStack));
-    ASSERT_SIZE(MMC->Write(0, 0, sizeof(ClusterInfo), (unsigned char*)&info), sizeof(ClusterInfo));
+    ASSERT_SIZE(MMC->Write(stack_offset, 0, sizeof(FreeStack), (byte_t*)&free_stack), sizeof(FreeStack));
+    ASSERT_SIZE(MMC->Write(0, 0, sizeof(ClusterInfo), (byte_t*)&info), sizeof(ClusterInfo));
 
     return true;
 faild:
@@ -396,13 +396,13 @@ ClusterContainer::ClusterContainer(ClusterMgr* mgr, cluster_t cluster) :
     flag(0),
     ref(0)
 {
-    buffer = new unsigned __int8[info->cluster_size];
+    buffer = new byte_t[info->cluster_size];
 
     // 从磁盘读入内存
     long offset = cluster * info->cluster_size;
     ASSERT_EOF(fseek(fd, offset, SEEK_SET));
 
-    ASSERT_SIZE(fread((void*)buffer, sizeof(unsigned __int8), info->cluster_size, fd), info->cluster_size);
+    ASSERT_SIZE(fread((void*)buffer, sizeof(byte_t), info->cluster_size, fd), info->cluster_size);
 
     flag |= FLAG_AVAILABLE;
 
@@ -427,10 +427,10 @@ bool ClusterContainer::Sync()
     }
 
     // 从内存写入磁盘
-    long offset = cluster * info->cluster_size;
+    offset_t offset = cluster * info->cluster_size;
     ASSERT_EOF(fseek(fd, offset, SEEK_SET));
 
-    ASSERT_SIZE(fwrite((void*)buffer, sizeof(unsigned __int8), info->cluster_size, fd), info->cluster_size);
+    ASSERT_SIZE(fwrite((void*)buffer, sizeof(byte_t), info->cluster_size, fd), info->cluster_size);
 
     flag &= ~FLAG_DIRTY;
     flag &= ~MASK_DCOUNT;
@@ -478,14 +478,14 @@ cluster_t ClusterContainer::GetCluster()
     return cluster;
 }
 
-size_t ClusterContainer::Read(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* dst)
+cluster_size_t ClusterContainer::Read(cluster_size_t dst_offset, cluster_size_t src_offset, cluster_size_t count, byte_t* dst)
 {
     if (src_offset < 0)
     {
         return 0;
     }
 
-    size_t size_max = info->cluster_size - src_offset;
+    cluster_size_t size_max = info->cluster_size - src_offset;
     if (size_max < count)
     {
         count = size_max;
@@ -500,14 +500,14 @@ size_t ClusterContainer::Read(size_t dst_offset, size_t src_offset, size_t count
     return count;
 }
 
-size_t ClusterContainer::Write(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* src)
+cluster_size_t ClusterContainer::Write(cluster_size_t dst_offset, cluster_size_t src_offset, cluster_size_t count, byte_t* src)
 {
     if (dst_offset < 0)
     {
         return 0;
     }
 
-    size_t size_max = info->cluster_size - dst_offset;
+    cluster_size_t size_max = info->cluster_size - dst_offset;
     if (size_max < count)
     {
         count = size_max;
@@ -524,14 +524,14 @@ size_t ClusterContainer::Write(size_t dst_offset, size_t src_offset, size_t coun
     return count;
 }
 
-size_t ClusterContainer::Memset(size_t dst_offset, size_t count, unsigned __int8 value)
+cluster_size_t ClusterContainer::Memset(cluster_size_t dst_offset, cluster_size_t count, byte_t value)
 {
     if (dst_offset < 0)
     {
         return 0;
     }
 
-    size_t size_max = info->cluster_size - dst_offset;
+    cluster_size_t size_max = info->cluster_size - dst_offset;
     if (size_max < count)
     {
         count = size_max;

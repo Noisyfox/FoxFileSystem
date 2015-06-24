@@ -69,7 +69,7 @@ bool Node::Modify()
 
 __int8 Node::ClusterSeek(size_t offset)
 {
-    if(offset == -1) // 特殊情况，在计算尺寸边界的时候用
+    if (offset == -1) // 特殊情况，在计算尺寸边界的时候用
     {
         seek_cluster_offset = sizeof(INode) + offset;
         return -1; // 不需要索引，直接可以储存在 MC 中
@@ -86,36 +86,50 @@ __int8 Node::ClusterSeek(size_t offset)
         return -1; // 不需要索引，直接可以储存在 MC 中
     }
     int i;
-    size_t size_prev = index_boundary.no_index;
-    size_t size_curr;
-    for (i = 0; i < MAX_DIRECT; i++) // 直接索引
-    {
-        size_curr = index_boundary.index_direct[i];
-        if (offset < size_curr)
+    file_size_t size_prev = index_boundary.no_index;
+    file_size_t size_curr, size_level_max;
+    size_level_max = index_boundary.index_direct[MAX_DIRECT - 1];
+    if (offset < size_level_max) {
+        for (i = 0; i < MAX_DIRECT; i++) // 直接索引
         {
-            seek_cluster_offset = offset - size_prev;
-            seek_index[0] = i;
-            return 0;
+            size_curr = index_boundary.index_direct[i];
+            if (offset < size_curr)
+            {
+                seek_cluster_offset = (size_t)(offset - size_prev);
+                seek_index[0] = i;
+                return 0;
+            }
+            size_prev = size_curr;
         }
-        size_prev = size_curr;
+    }
+    else
+    {
+        size_prev = size_level_max;
     }
 
     int j;
-    for (i = 0; i < MAX_INDIRECT; i++) // 间接索引
-    {
-        size_curr = index_boundary.index_indir[i];
-        if (offset < size_curr)
+    size_level_max = index_boundary.index_indir[MAX_INDIRECT - 1];
+    if (offset < size_level_max) {
+        for (i = 0; i < MAX_INDIRECT; i++) // 间接索引
         {
-            seek_cluster_offset = offset - size_prev;
-            for (j = i; j >= 0; j--)
+            size_curr = index_boundary.index_indir[i];
+            if (offset < size_curr)
             {
-                seek_index[j + 1] = seek_cluster_offset / index_boundary.size_level[j];
-                seek_cluster_offset %= index_boundary.size_level[j];
+                seek_cluster_offset = (size_t)(offset - size_prev);
+                for (j = 0; j <= i; j++)
+                {
+                    seek_index[j + 1] = (size_t)(seek_cluster_offset / index_boundary.size_level[i - j]);
+                    seek_cluster_offset %= index_boundary.size_level[i - j];
+                }
+                seek_index[0] = i;
+                return i + 1;
             }
-            seek_index[0] = i;
-            return i + 1;
+            size_prev = size_curr;
         }
-        size_prev = size_curr;
+    }
+    else
+    {
+        size_prev = size_level_max;
     }
 
     return SEEK_FAIL;
@@ -354,6 +368,11 @@ bool Node::Expand(size_t curr, size_t target)
     cluster_t next_cluster;
     ClusterContainer* current_cluster = NULL;
 
+    if (target == 4259713)
+    {
+        target = 4259713;
+    }
+
     SEEK_SIZE(curr);
     SEEK_SIZE(target);
 
@@ -378,7 +397,7 @@ bool Node::Expand(size_t curr, size_t target)
             inode.index_indir[i - 1] = next_cluster;
             // 修正当前索引
             seek_depth_target = fin_depth;
-            seek_cluster_offset_target = index_boundary.size_level[0] - 1;
+            seek_cluster_offset_target = (cluster_size_t)index_boundary.size_level[0] - 1;
             if (seek_depth_target == 0)
             {
                 seek_index_target[0] = MAX_DIRECT - 1;
@@ -404,7 +423,7 @@ bool Node::Expand(size_t curr, size_t target)
             }
             // 修正当前索引
             seek_depth_target = -1;
-            seek_cluster_offset_target = index_boundary.size_level[0] - 1;
+            seek_cluster_offset_target = (cluster_size_t)index_boundary.size_level[0] - 1;
         }
     }
 
@@ -427,7 +446,7 @@ bool Node::Expand(size_t curr, size_t target)
             ASSERT_FALSE(BuildCluster(seek_depth_target, inode.index_indir[seek_depth_target - 1], &seek_index_curr[1], &seek_index_target[1]));
             //修正索引
             memcpy(seek_index_target, seek_index_curr, sizeof(seek_index_curr));
-            seek_cluster_offset_target = index_boundary.size_level[0] - 1;
+            seek_cluster_offset_target = (cluster_size_t)index_boundary.size_level[0] - 1;
         }
     }
     else if (seek_depth_target == 0)
@@ -440,7 +459,7 @@ bool Node::Expand(size_t curr, size_t target)
         }
         // 修正当前索引
         seek_index_target[0] = seek_index_curr[0];
-        seek_cluster_offset_target = index_boundary.size_level[0] - 1;
+        seek_cluster_offset_target = (cluster_size_t)index_boundary.size_level[0] - 1;
     }
 
     // 最后处理在同一个簇中的情况
@@ -632,7 +651,7 @@ cluster_t Node::BuildClusterRight(__int8 depth, size_t* edge_right)
     }
     else
     {
-        ASSERT_FALSE(current_index->Memset(0, index_boundary.size_level[0], 0)); // 清空数据
+        ASSERT_FALSE(current_index->Memset(0, (cluster_size_t)index_boundary.size_level[0], 0)); // 清空数据
     }
 
     DISPOSE_CLUSTER(current_index);
@@ -808,7 +827,7 @@ size_t Node::GetPointer()
 
 __int64 Node::Seek(size_t offset)
 {
-    if(offset == cdo)
+    if (offset == cdo)
     {
         return cdo;
     }
@@ -919,7 +938,7 @@ NodeMgr::NodeMgr(ClusterMgr* cluster_mgr) :
     index_boundary.size_level[0] = cluster_size;
 
     // 计算每一级索引支持的最大数据长度
-    size_t s, s2;
+    file_size_t s, s2;
     index_boundary.no_index = s = cluster_size - sizeof(INode);
     int i;
     for (i = 0; i < MAX_DIRECT; i++)

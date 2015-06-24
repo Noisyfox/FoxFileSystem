@@ -3,10 +3,10 @@
 
 #include <cstdio>
 
+#include "f_types.h"
 #include "lru.hpp"
 #include "SparseArray.h"
 
-typedef unsigned __int32 cluster_t;
 // End Of Cluster
 #define EOC ((cluster_t)0xffffffff)
 #define MAX_STACK 512
@@ -30,7 +30,7 @@ typedef unsigned __int32 cluster_t;
 
 typedef struct
 {
-    size_t cluster_size; // 簇大小
+    cluster_size_t cluster_size; // 簇大小
     cluster_t cluster_count; // 簇数量
     cluster_t free_cluster_count; // 空闲簇数量
 } ClusterInfo;
@@ -60,7 +60,7 @@ private:
     ClusterInfo* info;
 
     cluster_t cluster;
-    unsigned __int8* buffer;
+    byte_t* buffer;
     unsigned __int16 flag;
     unsigned __int32 ref;
 
@@ -73,9 +73,9 @@ public:
     ~ClusterContainer();
     bool Sync();
     bool Avaliable();
-    size_t Read(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* dst);
-    size_t Write(size_t dst_offset, size_t src_offset, size_t count, unsigned __int8* src);
-    size_t Memset(size_t dst_offset, size_t count, unsigned __int8 value);
+    cluster_size_t Read(cluster_size_t dst_offset, cluster_size_t src_offset, cluster_size_t count, byte_t* dst);
+    cluster_size_t Write(cluster_size_t dst_offset, cluster_size_t src_offset, cluster_size_t count, byte_t* src);
+    cluster_size_t Memset(cluster_size_t dst_offset, cluster_size_t count, byte_t value);
 
     cluster_t GetCluster();
 };
@@ -102,7 +102,7 @@ public:
     bool LoadPartition(const char* file); // 载入分区文件
     bool ClosePartition(); // 关闭分区文件
 
-    size_t GetClusterSize(); // 获取簇大小
+    cluster_size_t GetClusterSize(); // 获取簇大小
     cluster_t GetFreeCluster(); // 获取空闲簇数量
 
     cluster_t* Allocate(cluster_t count, cluster_t* out); // 分配 count 个簇，储存在out中，如果成功，返回out，否则返回null

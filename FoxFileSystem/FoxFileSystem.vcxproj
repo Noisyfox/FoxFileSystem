@@ -21,6 +21,7 @@
     <ClInclude Include="lru.hpp" />
     <ClInclude Include="node.h" />
     <ClInclude Include="SparseArray.h" />
+    <ClInclude Include="f_types.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="virtual_file.h" />
   </ItemGroup>
