@@ -4,7 +4,7 @@
 typedef unsigned __int64 file_size_t;
 typedef unsigned __int32 cluster_size_t;
 
-typedef unsigned __int64 offset_t;
+typedef __int64 offset_t;
 typedef unsigned __int32 cluster_t;
 
 typedef unsigned __int8 byte_t;

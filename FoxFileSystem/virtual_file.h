@@ -23,6 +23,7 @@ public:
     vfile_t* Open(cluster_t node);
     vfile_t* Create();
     bool Close(vfile_t* vf);
+    bool Delete(vfile_t* vf);
 
     __int64 Truncate(vfile_t* vf, size_t size);
     __int64 Seek(vfile_t* vf, __int64 offset, __int32 origin);

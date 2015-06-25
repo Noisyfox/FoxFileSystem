@@ -351,7 +351,6 @@ bool Node::Shrink(size_t curr, size_t target)
 
     // 然后我们更新文件的描述
     inode.size = target;
-    inode.time_modify = time(NULL);
     ASSERT_FALSE(Modify());
 
     return true;
@@ -476,7 +475,6 @@ bool Node::Expand(size_t curr, size_t target)
     // 然后我们更新文件的描述
     inode.size = target + 1;
 
-    inode.time_modify = time(NULL);
     ASSERT_FALSE(Modify());
 
     return true;
@@ -768,6 +766,7 @@ bool Node::Sync()
         return true;
     }
 
+    inode.time_modify = time(NULL);
     // MC数据写入
     ASSERT_SIZE(MC->Write(0, 0, sizeof(INode), (unsigned __int8*)&inode), sizeof(INode));
 
@@ -886,7 +885,6 @@ size_t Node::Write(void const* buffer, size_t size)
         offset += available_in_cluster;
         size -= available_in_cluster;
     }
-    inode.time_modify = time(NULL);
     Modify();
 
 faild:
@@ -1051,6 +1049,8 @@ bool NodeMgr::Close(Node* node)
     ret = node->Sync() && ret;
     ret = cluster_service->Dispose(*node->current) && ret;
     ret = cluster_service->Dispose(*node->MC) && ret;
+
+    delete node;
 
     return ret;
 }

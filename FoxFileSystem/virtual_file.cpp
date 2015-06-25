@@ -71,6 +71,13 @@ bool VFile::Close(vfile_t* vf)
     return ret;
 }
 
+bool VFile::Delete(vfile_t* vf)
+{
+    Node* node = vf->node;
+    Close(vf);
+    return node_service->Delete(node);
+}
+
 __int64 VFile::Truncate(vfile_t* vf, size_t size)
 {
     if (size < 0)

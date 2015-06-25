@@ -12,12 +12,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cluster.cpp" />
+    <ClCompile Include="directory.cpp" />
+    <ClCompile Include="file.cpp" />
+    <ClCompile Include="file_util.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="virtual_file.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cluster.h" />
+    <ClInclude Include="directory.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="file_util.h" />
     <ClInclude Include="lru.hpp" />
     <ClInclude Include="node.h" />
     <ClInclude Include="SparseArray.h" />

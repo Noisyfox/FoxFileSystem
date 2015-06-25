@@ -2,6 +2,9 @@
 #include "cluster.h"
 #include "node.h"
 #include "virtual_file.h"
+#include "directory.h"
+#include "file.h"
+#include "file_util.h"
 
 int main()
 {
@@ -9,29 +12,42 @@ int main()
         CLUSTER_4K, 4096
     };
     bool ret = ClusterMgr::CreatePartition("Z:\\part0.f", &info);
-    ClusterMgr cluster_mgr;
+    ClusterMgr* cluster_mgr = new ClusterMgr();
     if (!ret)
     {
         return -1;
     }
-    ret = cluster_mgr.LoadPartition("Z:\\part0.f");
-    if (!ret)
-    {
-        return -1;
-    }
-
-    NodeMgr node_mgr(&cluster_mgr);
-    Node* root_node = node_mgr.CreateRootNode();
-    ret = node_mgr.Close(root_node);
+    ret = cluster_mgr->LoadPartition("Z:\\part0.f");
     if (!ret)
     {
         return -1;
     }
 
-    VFile vfile(&node_mgr);
+    NodeMgr* node_mgr = new NodeMgr(cluster_mgr);
+    Node* root_node = node_mgr->CreateRootNode();
+    ret = node_mgr->Close(root_node);
+    if (!ret)
+    {
+        return -1;
+    }
 
-    vfile_t* vf = vfile.Open(CLUSTER_REV_SECONDARY);
-    if (vf == NULL)
+    VFile* vfile = new VFile(node_mgr);
+
+    ret = Directory::CreateRootDirectory(vfile);
+    if (!ret)
+    {
+        return -1;
+    }
+
+    Directory* directory = new Directory(vfile);
+    ret = directory->Init();
+    if (!ret)
+    {
+        return -1;
+    }
+
+    File* file = directory->OpenFile("abcd.h", true, true, true, false, true);
+    if (file == NULL)
     {
         return -1;
     }
@@ -40,7 +56,7 @@ int main()
     unsigned char v = 0, v2 = 0;
     while (1)
     {
-        if (vfile.Write(vf, &v, 1) != 1)
+        if (file->Write(&v, 1) != 1)
         {
             break;
         }
@@ -48,7 +64,7 @@ int main()
         v++;
     }
 
-    if (vfile.Seek(vf, 0, SEEK_SET) != 0)
+    if (file->Seek(0, SEEK_SET) != 0)
     {
         return 0;
     }
@@ -56,7 +72,7 @@ int main()
     v = 0;
     while (1)
     {
-        if (vfile.Read(vf, &v2, 1) != 1)
+        if (file->Read(&v2, 1) != 1)
         {
             break;
         }
@@ -68,14 +84,16 @@ int main()
         v++;
     }
 
-    ret = vfile.Truncate(vf, 0);
+    ret = file->Truncate(0) != EOF;
 
-    if (vf == NULL)
-    {
-        return -1;
-    }
+    CloseFile(file);
+    delete directory;
+    delete vfile;
+    delete node_mgr;
 
-    ret = cluster_mgr.ClosePartition();
+    ret = cluster_mgr->ClosePartition();
+
+    delete cluster_mgr;
 
     return 0;
 }
