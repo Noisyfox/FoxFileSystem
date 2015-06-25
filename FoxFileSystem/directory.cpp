@@ -265,11 +265,11 @@ char* DirectoryFile::GetAbsolutePath(char* path)
     char* path_bak = path;
 
     DirectoryFile* dir = Duplicate();
-    
-    while(1)
+
+    while (1)
     {
         p[count++] = dir;
-        if(dir->IsRoot())
+        if (dir->IsRoot())
         {
             break;
         }
@@ -278,14 +278,21 @@ char* DirectoryFile::GetAbsolutePath(char* path)
     }
 
     char n[MAX_FILE];
-    for (int i = count - 2; i >= 0; i--)
+    if (count == 1)
     {
-        DirectoryFile* c = p[i];
-        if(!c->IsRoot())
+        sprintf(path, "/");
+    }
+    else
+    {
+        for (int i = count - 2; i >= 0; i--)
         {
-            DirectoryFile* parent = p[i + 1];
-            ASSERT_NULL(parent->GetFileName(c->dir_vfile->node->GetNodeId(), n));
-            path += sprintf(path, "/%s", n);
+            DirectoryFile* c = p[i];
+            if (!c->IsRoot())
+            {
+                DirectoryFile* parent = p[i + 1];
+                ASSERT_NULL(parent->GetFileName(c->dir_vfile->node->GetNodeId(), n));
+                path += sprintf(path, "/%s", n);
+            }
         }
     }
 

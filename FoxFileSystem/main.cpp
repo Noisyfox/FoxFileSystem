@@ -108,6 +108,9 @@ int main()
     printf("%s\n", path);
     directory->CloseDirectory(dir);
 
+    directory->GetWD(path, MAX_PATH);
+    printf("%s\n", path);
+
     delete directory;
     delete vfile;
     delete node_mgr;
