@@ -5,6 +5,7 @@
 #include "directory.h"
 #include "file.h"
 #include "file_util.h"
+#include "shell.h"
 
 int main()
 {
@@ -46,6 +47,7 @@ int main()
         return -1;
     }
 
+    /*
     directory->MkDir("xyz");
     directory->MkDir("xyz/sdd");
     directory->MkDir("xyz/sdd/baa");
@@ -55,7 +57,7 @@ int main()
     {
         return -1;
     }
-    /*
+    
     long i = 0;
     unsigned char v = 0, v2 = 0;
     while (1)
@@ -89,7 +91,6 @@ int main()
     }
 
     ret = file->Truncate(0) != EOF;
-    */
     CloseFile(file);
 
     DirectoryFile* dir = directory->OpenDirectory(".");
@@ -110,6 +111,11 @@ int main()
 
     directory->GetWD(path, MAX_PATH);
     printf("%s\n", path);
+
+
+    */
+
+    shell_main(directory);
 
     delete directory;
     delete vfile;

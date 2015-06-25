@@ -73,9 +73,10 @@ bool VFile::Close(vfile_t* vf)
 
 bool VFile::Delete(vfile_t* vf)
 {
-    Node* node = vf->node;
-    Close(vf);
-    return node_service->Delete(node);
+    bool ret = node_service->Delete(vf->node);
+    delete vf;
+
+    return ret;
 }
 
 __int64 VFile::Truncate(vfile_t* vf, size_t size)
@@ -107,7 +108,9 @@ __int64 VFile::Truncate(vfile_t* vf, size_t size)
         vf->vflag &= ~VFLAG_OVERSIZE;
     }
 
-    return vf->node->Truncate(size);
+    ASSERT_FALSE(vf->node->Truncate(size));
+
+    return size;
 faild:
     return EOF;
 }
@@ -199,3 +202,9 @@ size_t VFile::Read(vfile_t* vf, void* buffer, size_t size)
 
     return read_size;
 }
+
+bool VFile::Sync(vfile_t* vf)
+{
+    return vf->node->Sync();
+}
+

@@ -370,11 +370,6 @@ bool Node::Expand(size_t curr, size_t target)
     cluster_t next_cluster;
     ClusterContainer* current_cluster = NULL;
 
-    if (target == 4259713)
-    {
-        target = 4259713;
-    }
-
     SEEK_SIZE(curr);
     SEEK_SIZE(target);
 
@@ -473,7 +468,7 @@ bool Node::Expand(size_t curr, size_t target)
     DISPOSE_CLUSTER(current_cluster);
 
     // 然后我们更新文件的描述
-    inode.size = target + 1;
+    inode.size = target;
 
     ASSERT_FALSE(Modify());
 

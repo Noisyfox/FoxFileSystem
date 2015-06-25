@@ -30,6 +30,8 @@ public:
     size_t Tell(vfile_t* vf);
     size_t Write(vfile_t* vf, void const* buffer, size_t size);
     size_t Read(vfile_t* vf, void* buffer, size_t size);
+
+    bool Sync(vfile_t* vf);
 };
 
 #endif

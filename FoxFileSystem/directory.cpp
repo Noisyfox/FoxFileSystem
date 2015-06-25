@@ -139,6 +139,7 @@ bool DirectoryFile::Close()
 
 vfile_t* DirectoryFile::DuplicateFile()
 {
+    vfile_service->Sync(dir_vfile);
     return vfile_service->Open(dir_vfile->node->GetNodeId());
 }
 
@@ -479,9 +480,16 @@ bool Directory::RemoveDirectory(DirectoryFile* dir)
 
 vfile_t* Directory::CreateFile(char const* path)
 {
+    vfile_t* exist = Open(path);
+    if (exist != NULL)
+    {
+        vfile_service->Close(exist);
+        return NULL;
+    }
+
     DirectoryFile* parent = OpenParentDirectory(path);
     char file_name[MAX_FILE];
-    vfile_t* dir = NULL;
+    vfile_t* file = NULL;
 
     ASSERT_NULL(parent); // ¸¸Ä¿Â¼²»´æÔÚ
 
@@ -508,21 +516,23 @@ vfile_t* Directory::CreateFile(char const* path)
         goto faild;
     }
 
-    dir = vfile_service->Create();
-    ASSERT_NULL(dir);
+    file = vfile_service->Create();
+    ASSERT_NULL(file);
 
-    cluster_t id = dir->node->GetNodeId();
+    file->node->SetMode(TYPE_NORMAL, MODE_MASK_TYPE);
+
+    cluster_t id = file->node->GetNodeId();
 
     ASSERT_FALSE(parent->AddFile(file_name, id));
 
     CLOSE_DIR(parent);
 
-    return dir;
+    return file;
 faild:
     CLOSE_DIR(parent);
-    if (dir != NULL)
+    if (file != NULL)
     {
-        vfile_service->Delete(dir);
+        vfile_service->Delete(file);
     }
     return NULL;
 }
@@ -623,10 +633,9 @@ int Directory::ChDir(char const* path)
         return EOF;
     }
 
-    CLOSE_DIR(cwd_file);
-
     char cwd_t[MAX_PATH];
     ASSERT_NULL(target->GetAbsolutePath(cwd_t));
+    CLOSE_DIR(cwd_file);
     cwd_file = target;
     strncpy(cwd, cwd_t, MAX_PATH);
 
@@ -638,6 +647,13 @@ faild:
 
 int Directory::MkDir(char const* path)
 {
+    vfile_t* exist = Open(path);
+    if(exist != NULL)
+    {
+        vfile_service->Close(exist);
+        return EOF;
+    }
+
     DirectoryFile* parent = OpenParentDirectory(path);
     char file_name[MAX_FILE];
     vfile_t* dir = NULL;
