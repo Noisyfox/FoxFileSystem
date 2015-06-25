@@ -21,12 +21,9 @@ private:
     offset_t entry_offset; // FindEntry ½á¹û
     size_t entry_size;
 
-    char entry_current[MAX_FILE];
     offset_t entry_current_offset;
     size_t entry_current_size;
     offset_t entry_next_offset;
-
-    cluster_t NextEntry(bool start);
 
     cluster_t FindEntry(char const* name);
 public:
@@ -48,6 +45,9 @@ public:
     bool IsRoot();
 
     DirectoryFile* OpenParentDirectory();
+
+    cluster_t NextEntry(bool start);
+    char entry_current[MAX_FILE];
 };
 
 class Directory
@@ -65,7 +65,6 @@ private:
 
     vfile_t* Open(char const* path);
     
-    DirectoryFile* OpenDirectory(char const* path);
     DirectoryFile* OpenParentDirectory(char const* path);
 
     static bool CreateDirectory(VFile* vfile, vfile_t* vf, cluster_t parent);
@@ -80,6 +79,9 @@ public:
 
     static bool CreateRootDirectory(VFile* vfile);
 
+    DirectoryFile* OpenDirectory(char const* path);
+    int CloseDirectory(DirectoryFile* dir);
+
     bool Init();
 
     char* GetWD(char* buf, size_t size);
@@ -91,6 +93,7 @@ public:
     int Rename(char const* old_name, char const* new_name);
 
     File* OpenFile(char const* path, bool read, bool write, bool create, bool append, bool clear);
+
 };
 
 #endif

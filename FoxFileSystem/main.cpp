@@ -46,7 +46,9 @@ int main()
         return -1;
     }
 
-    File* file = directory->OpenFile("abcd.h", true, true, true, false, true);
+    directory->MkDir("xyz");
+
+    File* file = directory->OpenFile("xyz/abcd.h", true, true, true, false, true);
     if (file == NULL)
     {
         return -1;
@@ -87,6 +89,17 @@ int main()
     ret = file->Truncate(0) != EOF;
 
     CloseFile(file);
+
+    DirectoryFile* dir = directory->OpenDirectory(".");
+    if(dir->NextEntry(true) != EOC)
+    {
+        do
+        {
+            printf("%s\n", dir->entry_current);
+        } while (dir->NextEntry(false) != EOC);
+    }
+    directory->CloseDirectory(dir);
+
     delete directory;
     delete vfile;
     delete node_mgr;

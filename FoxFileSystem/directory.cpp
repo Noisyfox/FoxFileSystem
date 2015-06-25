@@ -347,26 +347,6 @@ faild:
     return NULL;
 }
 
-DirectoryFile* Directory::OpenDirectory(char const* path)
-{
-    vfile_t* target = Open(path);
-    ASSERT_NULL(target);
-
-    ASSERT_FALSE(IS_DIR(target));
-
-    DirectoryFile* df;
-    df = new DirectoryFile(vfile_service, target);
-    ASSERT_NULL(df);
-
-    return df;
-faild:
-    if (target != NULL)
-    {
-        vfile_service->Close(target);
-    }
-    return NULL;
-}
-
 DirectoryFile* Directory::OpenParentDirectory(char const* path)
 {
     char pt[MAX_PATH];
@@ -503,6 +483,34 @@ bool Directory::CreateRootDirectory(VFile* vfile)
     return CreateDirectory(vfile, root, ROOT_DIRECTORY);
 faild:
     return false;
+}
+
+DirectoryFile* Directory::OpenDirectory(char const* path)
+{
+    vfile_t* target = Open(path);
+    ASSERT_NULL(target);
+
+    ASSERT_FALSE(IS_DIR(target));
+
+    DirectoryFile* df;
+    df = new DirectoryFile(vfile_service, target);
+    ASSERT_NULL(df);
+
+    return df;
+faild:
+    if (target != NULL)
+    {
+        vfile_service->Close(target);
+    }
+    return NULL;
+}
+
+int Directory::CloseDirectory(DirectoryFile* dir)
+{
+    dir->Close();
+    delete dir;
+
+    return 0;
 }
 
 bool Directory::Init()
