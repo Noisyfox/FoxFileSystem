@@ -3,24 +3,33 @@
 #include "node.h"
 #include "virtual_file.h"
 #include "directory.h"
-#include "file.h"
-#include "file_util.h"
 #include "shell.h"
 
 int main()
 {
+    // ÊäÈë´ÅÅÌÎÄ¼þ
+    char path[MAX_PATH];
+    cluster_t cluster_count = 0;
+    printf("Input partition file location: ");
+    scanf("%s", path);
+    printf("Input partition cluster count: ");
+    scanf("%ud", &cluster_count);
+    getchar();
+
     ClusterInfo info = {
-        CLUSTER_4K, 4096
+        CLUSTER_4K, cluster_count
     };
-    bool ret = ClusterMgr::CreatePartition("Z:\\part0.f", &info);
+    bool ret = ClusterMgr::CreatePartition(path, &info);
     ClusterMgr* cluster_mgr = new ClusterMgr();
     if (!ret)
     {
+        fprintf(stderr, "Error create partition!");
         return -1;
     }
-    ret = cluster_mgr->LoadPartition("Z:\\part0.f");
+    ret = cluster_mgr->LoadPartition(path);
     if (!ret)
     {
+        fprintf(stderr, "Error load partition!");
         return -1;
     }
 
@@ -29,6 +38,7 @@ int main()
     ret = node_mgr->Close(root_node);
     if (!ret)
     {
+        fprintf(stderr, "Error create root node!");
         return -1;
     }
 
@@ -37,6 +47,7 @@ int main()
     ret = Directory::CreateRootDirectory(vfile);
     if (!ret)
     {
+        fprintf(stderr, "Error create root dir!");
         return -1;
     }
 
@@ -44,6 +55,7 @@ int main()
     ret = directory->Init();
     if (!ret)
     {
+        fprintf(stderr, "Error reading dir!");
         return -1;
     }
 
