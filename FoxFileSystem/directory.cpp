@@ -258,6 +258,53 @@ char* DirectoryFile::GetFileName(cluster_t node, char* name)
     return NULL;
 }
 
+char* DirectoryFile::GetAbsolutePath(char* path)
+{
+    DirectoryFile* p[MAX_PATH];
+    size_t count = 0;
+    char* path_bak = path;
+
+    DirectoryFile* dir = Duplicate();
+    
+    while(1)
+    {
+        p[count++] = dir;
+        if(dir->IsRoot())
+        {
+            break;
+        }
+        dir = dir->OpenParentDirectory();
+        ASSERT_NULL(dir);
+    }
+
+    char n[MAX_FILE];
+    for (int i = count - 2; i >= 0; i--)
+    {
+        DirectoryFile* c = p[i];
+        if(!c->IsRoot())
+        {
+            DirectoryFile* parent = p[i + 1];
+            ASSERT_NULL(parent->GetFileName(c->dir_vfile->node->GetNodeId(), n));
+            path += sprintf(path, "/%s", n);
+        }
+    }
+
+    for (int i = 0; i < count; i++)
+    {
+        p[i]->Close();
+        delete p[i];
+    }
+
+    return path_bak;
+faild:
+    for (int i = 0; i < count; i++)
+    {
+        p[i]->Close();
+        delete p[i];
+    }
+    return NULL;
+}
+
 bool DirectoryFile::IsEmpty()
 {
     if (NextEntry(true) != EOF)
@@ -286,7 +333,7 @@ bool DirectoryFile::IsRoot()
 DirectoryFile* DirectoryFile::OpenParentDirectory()
 {
     vfile_t* f;
-    f = Open(".");
+    f = Open("..");
     ASSERT_NULL(f);
 
     return new DirectoryFile(vfile_service, f);
@@ -571,10 +618,15 @@ int Directory::ChDir(char const* path)
 
     CLOSE_DIR(cwd_file);
 
+    char cwd_t[MAX_PATH];
+    ASSERT_NULL(target->GetAbsolutePath(cwd_t));
     cwd_file = target;
-    strncpy(cwd, path, MAX_PATH);
+    strncpy(cwd, cwd_t, MAX_PATH);
 
     return 0;
+faild:
+    CLOSE_DIR(target);
+    return EOF;
 }
 
 int Directory::MkDir(char const* path)

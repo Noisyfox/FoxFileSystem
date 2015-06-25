@@ -41,6 +41,8 @@ public:
 
     char* GetFileName(cluster_t node, char* name);
 
+    char* GetAbsolutePath(char* path);
+
     bool IsEmpty();
     bool IsRoot();
 

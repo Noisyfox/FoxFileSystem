@@ -47,13 +47,15 @@ int main()
     }
 
     directory->MkDir("xyz");
+    directory->MkDir("xyz/sdd");
+    directory->MkDir("xyz/sdd/baa");
 
     File* file = directory->OpenFile("xyz/abcd.h", true, true, true, false, true);
     if (file == NULL)
     {
         return -1;
     }
-
+    /*
     long i = 0;
     unsigned char v = 0, v2 = 0;
     while (1)
@@ -87,7 +89,7 @@ int main()
     }
 
     ret = file->Truncate(0) != EOF;
-
+    */
     CloseFile(file);
 
     DirectoryFile* dir = directory->OpenDirectory(".");
@@ -98,6 +100,12 @@ int main()
             printf("%s\n", dir->entry_current);
         } while (dir->NextEntry(false) != EOC);
     }
+    directory->CloseDirectory(dir);
+
+    dir = directory->OpenDirectory("xyz/../xyz/./sdd/baa");
+    char path[MAX_PATH];
+    dir->GetAbsolutePath(path);
+    printf("%s\n", path);
     directory->CloseDirectory(dir);
 
     delete directory;
